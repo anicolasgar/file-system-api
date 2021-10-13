@@ -2,6 +2,7 @@ package com.jetbrains.filesystem.api;
 
 import com.jetbrains.filesystem.logic.File;
 import com.jetbrains.filesystem.exceptions.FileNotFoundException;
+import java.util.Map;
 
 /** Service for managing file system's operations. */
 public interface FileService {
@@ -33,7 +34,12 @@ public interface FileService {
    */
   File read(String absolutePath);
 
-  /** Pending. */
+  /**
+   * Appends with a new content, the current content of a file.
+   *
+   * @param absolutePath The location of the file.
+   * @param content The content that will be appended.
+   */
   void append(String absolutePath, byte[] content);
 
   /**
@@ -44,9 +50,31 @@ public interface FileService {
    */
   void delete(String absolutePath);
 
-  /** Pending. */
-  void rename(String oldFileName, String newFileName);
+  /**
+   * Renamed the associated file.
+   *
+   * <p>Note that this method replicates {@link #move(String, String)}. In a following interation,
+   * it will be improved.
+   *
+   * @param oldAbsolutePath The path where the file is located.
+   * @param newAbsolutePath The desired new path.
+   * @throws FileNotFoundException if the file doesn't exist.
+   */
+  void rename(String oldAbsolutePath, String newAbsolutePath);
 
-  /** Pending. */
+  /**
+   * Moves the associated file from one path to another.
+   *
+   * @param oldPath The path where the file is located.
+   * @param newPath The desired new path.
+   * @throws FileNotFoundException if the file doesn't exist.
+   */
   void move(String oldPath, String newPath);
+
+  /**
+   * A set of metrics to monitor the status of the service.
+   *
+   * @return The set of metrics.
+   */
+  Map<String, String> metrics();
 }

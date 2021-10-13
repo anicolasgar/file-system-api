@@ -1,6 +1,7 @@
 package com.jetbrains.filesystem.logic;
 
 import com.jetbrains.filesystem.api.FileService;
+import java.util.Map;
 
 public class FileServiceImpl implements FileService {
 
@@ -46,7 +47,8 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public void rename(String oldAbsolutePath, String newAbsolutePath) {
-    // todo: Similar than #move?
+    // todo: Instead of deleting + inserting, we could do a search and update the file.
+    this.move(oldAbsolutePath, newAbsolutePath);
   }
 
   @Override
@@ -54,5 +56,10 @@ public class FileServiceImpl implements FileService {
     File file = fileManager.read(oldAbsolutePath);
     fileManager.delete(oldAbsolutePath);
     fileManager.save(new File(newAbsolutePath, file.getContent()));
+  }
+
+  @Override
+  public Map<String, String> metrics() {
+    return fileManager.metrics();
   }
 }

@@ -77,7 +77,7 @@ class FileServiceImplTest {
 
   @Test
   void rename() {
-    // TODO.
+    // TODO: With the given implementation, it is the same than #move.
 
   }
 
