@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("unit")
-public class FileManagerTest {
+class FileManagerTest {
   private static final String BASE_PATH = "/hello/world";
   private static final String ABSOLUTE_PATH = BASE_PATH + "/test.json";
   private static final String UNKNOWN_PATH = "non-existent-path";

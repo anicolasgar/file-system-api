@@ -6,10 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+@Tag("integration")
 class StorageServiceTest {
-
   @BeforeEach
   void beforeMethod() {
     java.io.File file = new java.io.File(BASE_PHYSICAL_PATH + CONTAINER_NAME);

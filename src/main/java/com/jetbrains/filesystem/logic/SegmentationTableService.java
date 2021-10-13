@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.stream.Collectors;
 
 /** A service for managing segmentation. */
@@ -16,11 +17,18 @@ class SegmentationTableService {
   /** A mapping from depth to their associated files, which are indexed by file name. */
   private final Map<Integer, Map<String, FileMetaData>> data = new ConcurrentHashMap<>();
   /** A queue that contains all the free fragments between files. */
-  private final Queue<FileMetaData> fragmentedSpace =
-      new PriorityQueue<>(Comparator.comparingInt(FileMetaData::getSegmentNumber));
+  private final Queue<FileMetaData> fragmentedSpace = new PriorityBlockingQueue<>();
 
-  public Queue<FileMetaData> getFragmentedSpace() {
+  Queue<FileMetaData> getFragmentedSpace() {
     return fragmentedSpace;
+  }
+
+  void addFragmentedSpace(Queue<FileMetaData> newFragmentedSpace) {
+    this.fragmentedSpace.addAll(newFragmentedSpace);
+  }
+
+  public FileMetaData pollFragmentedSpace() {
+    return this.fragmentedSpace.poll();
   }
 
   Optional<FileMetaData> find(String absolutePath) {

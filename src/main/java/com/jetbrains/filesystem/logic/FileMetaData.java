@@ -7,7 +7,7 @@ import com.jetbrains.filesystem.api.File;
  *
  * <p>It can also represent free memory slots.
  */
-class FileMetaData {
+class FileMetaData implements Comparable<FileMetaData> {
   private final String fileName;
   private final String absolutePath;
   private final int from;
@@ -44,5 +44,10 @@ class FileMetaData {
 
   public boolean isContiguous(FileMetaData emptySpace) {
     return this.to == emptySpace.getFrom() || this.from == emptySpace.getTo();
+  }
+
+  @Override
+  public int compareTo(FileMetaData o) {
+    return segmentNumber - o.getSegmentNumber();
   }
 }

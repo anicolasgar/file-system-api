@@ -113,7 +113,7 @@ class FileManager {
     return stats;
   }
 
-  void compactMemory() {
+  synchronized void compactMemory() {
     LOG.info("Started memory compaction...");
     // We should iterate until we don't move files anymore.
     while (doCompactMemory() > 0) {}
@@ -140,7 +140,7 @@ class FileManager {
         new PriorityQueue<>(Comparator.comparingInt(FileMetaData::getSegmentNumber));
 
     while (!segmentationTableService.getFragmentedSpace().isEmpty()) {
-      FileMetaData emptySpace = segmentationTableService.getFragmentedSpace().poll();
+      FileMetaData emptySpace = segmentationTableService.pollFragmentedSpace();
       Optional<FileMetaData> fileMetaDataToMoveOpt =
           findFileToMove(sortedSegmentationTable, emptySpace);
 
@@ -163,7 +163,7 @@ class FileManager {
           () -> newFragmentedSpace.offer(emptySpace));
     }
     newFileMetaDataList.forEach(f -> segmentationTableService.addOrReplace(f, false));
-    segmentationTableService.getFragmentedSpace().addAll(newFragmentedSpace);
+    segmentationTableService.addFragmentedSpace(newFragmentedSpace);
     return newFileMetaDataList.size();
   }
 

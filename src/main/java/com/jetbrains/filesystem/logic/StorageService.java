@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 class StorageService {
   private static final Logger LOG = LoggerFactory.getLogger(StorageService.class);
   /** The base path of the emulated file system. */
-  @VisibleForTesting static final String BASE_PHYSICAL_PATH = "/users/nicolasgarcia/test/";
+  @VisibleForTesting static final String BASE_PHYSICAL_PATH = "/tmp/";
   /** The name of the file where all the emulated file system is stored. */
   @VisibleForTesting static final String CONTAINER_NAME = "jetbrains-assignment";
 
@@ -23,6 +23,7 @@ class StorageService {
   }
 
   void storeInContainer(byte[] content, int position) {
+    // TODO: The subfolders should exist.
     try (RandomAccessFile raf = new RandomAccessFile(BASE_PHYSICAL_PATH + CONTAINER_NAME, "rw")) {
       raf.seek(position);
       raf.write(content);
