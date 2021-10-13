@@ -1,6 +1,12 @@
 package com.jetbrains.filesystem.logic;
 
-/** Contains meta-data from a specific {@link File}. */
+import com.jetbrains.filesystem.api.File;
+
+/**
+ * Contains meta-data from a specific (existing) {@link File}.
+ *
+ * <p>It can also represent free memory slots.
+ */
 class FileMetaData {
   private final String fileName;
   private final String absolutePath;
@@ -24,10 +30,6 @@ class FileMetaData {
     return absolutePath;
   }
 
-  public int getSize() {
-    return to - from;
-  }
-
   public int getFrom() {
     return from;
   }
@@ -38,5 +40,9 @@ class FileMetaData {
 
   public int getSegmentNumber() {
     return segmentNumber;
+  }
+
+  public boolean isContiguous(FileMetaData emptySpace) {
+    return this.to == emptySpace.getFrom() || this.from == emptySpace.getTo();
   }
 }

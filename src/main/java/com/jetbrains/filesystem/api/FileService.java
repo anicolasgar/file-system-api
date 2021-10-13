@@ -1,6 +1,5 @@
 package com.jetbrains.filesystem.api;
 
-import com.jetbrains.filesystem.logic.File;
 import com.jetbrains.filesystem.exceptions.FileNotFoundException;
 import java.util.Map;
 

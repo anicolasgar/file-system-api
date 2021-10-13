@@ -1,8 +1,10 @@
 package com.jetbrains.filesystem.logic;
 
 import com.jetbrains.filesystem.exceptions.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import org.assertj.core.util.VisibleForTesting;
 import org.slf4j.Logger;
@@ -29,11 +31,11 @@ class StorageService {
       throw new FileNotFoundException();
     } catch (IOException e) {
       LOG.warn("Failed to store in container", e);
-      // todo: Do something else?
+      throw new IllegalStateException();
     }
   }
 
-  byte[] readFromContainer() {
+  byte[] readAllFromContainer() {
     try {
       RandomAccessFile f = new RandomAccessFile(BASE_PHYSICAL_PATH + CONTAINER_NAME, "r");
       byte[] output = new byte[(int) f.length()];
@@ -45,12 +47,12 @@ class StorageService {
     }
   }
 
-  byte[] readFromContainer(int position, int len) {
+  byte[] readFromContainer(int from, int to) {
     try {
       RandomAccessFile raf = new RandomAccessFile(BASE_PHYSICAL_PATH + CONTAINER_NAME, "r");
-      byte[] output = new byte[len];
-      raf.seek(position);
-      raf.readFully(output, 0, len);
+      byte[] output = new byte[to - from];
+      raf.seek(from);
+      raf.readFully(output, 0, to - from);
       return output;
     } catch (IOException e) {
       LOG.warn("File not found", e);
@@ -69,13 +71,23 @@ class StorageService {
     return f.exists() && f.canWrite() && !f.isDirectory();
   }
 
-  public long getContainerSize() {
+  long getContainerSize() {
     try {
       RandomAccessFile raf = new RandomAccessFile(BASE_PHYSICAL_PATH + CONTAINER_NAME, "r");
       return raf.length();
     } catch (java.io.FileNotFoundException e) {
       LOG.warn("File not found", e);
       throw new FileNotFoundException();
+    } catch (IOException e) {
+      LOG.warn("An error has occurred", e);
+      throw new IllegalStateException();
+    }
+  }
+
+  void resizeContainer(FileMetaData fileMetaData) {
+    try (FileChannel outChan =
+        new FileOutputStream(BASE_PHYSICAL_PATH + CONTAINER_NAME, true).getChannel()) {
+      outChan.truncate(fileMetaData.getFrom());
     } catch (IOException e) {
       LOG.warn("An error has occurred", e);
       throw new IllegalStateException();

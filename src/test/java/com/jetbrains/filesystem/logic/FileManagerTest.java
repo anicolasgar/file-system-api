@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.jetbrains.filesystem.api.File;
 import com.jetbrains.filesystem.exceptions.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Tag;

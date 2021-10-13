@@ -1,5 +1,6 @@
 package com.jetbrains.filesystem.logic;
 
+import com.jetbrains.filesystem.api.File;
 import com.jetbrains.filesystem.api.FileService;
 import java.util.Map;
 
@@ -36,7 +37,6 @@ public class FileServiceImpl implements FileService {
     byte[] newContent = new byte[oldFile.getContent().length + content.length];
     System.arraycopy(oldFile.getContent(), 0, newContent, 0, oldFile.getContent().length);
     System.arraycopy(content, 0, newContent, oldFile.getContent().length, content.length);
-
     fileManager.save(new File(absolutePath, newContent));
   }
 

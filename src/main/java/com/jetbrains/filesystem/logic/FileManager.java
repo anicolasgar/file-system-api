@@ -2,15 +2,15 @@ package com.jetbrains.filesystem.logic;
 
 import static com.jetbrains.filesystem.utils.SerializationUtils.serialize;
 
+import com.jetbrains.filesystem.api.File;
 import com.jetbrains.filesystem.exceptions.FileCorruptedException;
 import com.jetbrains.filesystem.exceptions.FileNotFoundException;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.StreamCorruptedException;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -18,9 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,15 +30,14 @@ import org.slf4j.LoggerFactory;
  */
 class FileManager {
   private static final Logger LOG = LoggerFactory.getLogger(FileManager.class);
-  private static final String BASE_LOGIC_PATH = "/";
   private final StorageService storageService;
-  private final SegmentationTable segmentationTable;
+  private final SegmentationTableService segmentationTableService;
   private final AtomicInteger nextAvailableBit;
   private final AtomicInteger nextSegmentNumber;
 
   public FileManager(StorageService storageService) {
     this.storageService = storageService;
-    this.segmentationTable = new SegmentationTable();
+    this.segmentationTableService = new SegmentationTableService();
     this.nextAvailableBit = new AtomicInteger(0);
     this.nextSegmentNumber = new AtomicInteger(0);
   }
@@ -48,7 +45,7 @@ class FileManager {
   void save(File file) {
     byte[] serializedFile = serialize(file);
 
-    Optional<FileMetaData> oldFileMetaData = segmentationTable.find(file.getAbsolutePath());
+    Optional<FileMetaData> oldFileMetaData = segmentationTableService.find(file.getAbsolutePath());
 
     oldFileMetaData.ifPresent(
         fileMetaData ->
@@ -62,19 +59,19 @@ class FileManager {
             from,
             from + serializedFile.length,
             nextSegmentNumber.getAndIncrement());
-    segmentationTable.addOrReplace(fileMetaData);
+    segmentationTableService.addOrReplace(fileMetaData, true);
     storageService.storeInContainer(serializedFile, from);
   }
 
   File read(String absolutePath) {
     FileMetaData fileMetaData =
-        segmentationTable.find(absolutePath).orElseThrow(FileNotFoundException::new);
+        segmentationTableService.find(absolutePath).orElseThrow(FileNotFoundException::new);
     return findFile(fileMetaData.getFrom(), fileMetaData.getTo());
   }
 
   private File findFile(int fromPosition, int toPosition) {
     try {
-      byte[] bytes = storageService.readFromContainer(fromPosition, toPosition - fromPosition);
+      byte[] bytes = storageService.readFromContainer(fromPosition, toPosition);
       if (bytes.length == 0) {
         throw new FileNotFoundException();
       }
@@ -100,8 +97,8 @@ class FileManager {
 
   void delete(String absolutePath) {
     FileMetaData fileMetaData =
-        segmentationTable.find(absolutePath).orElseThrow(FileNotFoundException::new);
-    segmentationTable.delete(fileMetaData);
+        segmentationTableService.find(absolutePath).orElseThrow(FileNotFoundException::new);
+    segmentationTableService.delete(fileMetaData);
     storageService.dropFromContainer(fileMetaData.getFrom(), fileMetaData.getTo());
   }
 
@@ -111,63 +108,93 @@ class FileManager {
 
     stats.put("can_write", String.valueOf(storageService.isAllowedToWriteInContainer()));
     stats.put("container_size", String.valueOf(containerSize));
-    stats.put("empty_fragments", String.valueOf(segmentationTable.getFragmentedSpace().size()));
+    stats.put(
+        "empty_fragments", String.valueOf(segmentationTableService.getFragmentedSpace().size()));
     return stats;
   }
 
   void compactMemory() {
-    // todo: Implement this!
+    LOG.info("Started memory compaction...");
+    // We should iterate until we don't move files anymore.
+    while (doCompactMemory() > 0) {}
+
+    // Now we should drop all the empty files at the end of the container.
+    segmentationTableService
+        .findLastFragmentedSpace()
+        .ifPresent(
+            fileMetaData -> {
+              storageService.resizeContainer(fileMetaData);
+
+              nextAvailableBit.set(fileMetaData.getFrom());
+              segmentationTableService.deleteFragmentedSpace(fileMetaData);
+            });
+    LOG.info("Memory compaction done");
   }
 
-  static class SegmentationTable {
-    /** A mapping from depth to their associated files, which are indexed by file name. */
-    private final Map<Integer, Map<String, FileMetaData>> data = new ConcurrentHashMap<>();
-    /** A queue that contains all the free fragments between files. */
-    private final Queue<FileMetaData> fragmentedSpace =
+  private int doCompactMemory() {
+    segmentationTableService.mergeContiguousFragmentedSpace();
+    List<FileMetaData> sortedSegmentationTable =
+        segmentationTableService.getSortedSegmentationTable();
+    List<FileMetaData> newFileMetaDataList = new ArrayList<>();
+    Queue<FileMetaData> newFragmentedSpace =
         new PriorityQueue<>(Comparator.comparingInt(FileMetaData::getSegmentNumber));
 
-    public Map<Integer, Map<String, FileMetaData>> getData() {
-      return data;
+    while (!segmentationTableService.getFragmentedSpace().isEmpty()) {
+      FileMetaData emptySpace = segmentationTableService.getFragmentedSpace().poll();
+      Optional<FileMetaData> fileMetaDataToMoveOpt =
+          findFileToMove(sortedSegmentationTable, emptySpace);
+
+      fileMetaDataToMoveOpt.ifPresentOrElse(
+          fileMetaDataToMove -> {
+            byte[] fileToMoveBytes =
+                storageService.readFromContainer(
+                    fileMetaDataToMove.getFrom(), fileMetaDataToMove.getTo());
+
+            FileMetaData newEmptySpace =
+                generateNewEmptySpace(fileMetaDataToMove, fileToMoveBytes, emptySpace);
+            newFragmentedSpace.offer(newEmptySpace);
+
+            // Update the new meta data for the moved file.
+            FileMetaData newFileMetaData =
+                generateNewMetaData(fileMetaDataToMove, fileToMoveBytes, emptySpace);
+
+            newFileMetaDataList.add(newFileMetaData);
+          },
+          () -> newFragmentedSpace.offer(emptySpace));
     }
+    newFileMetaDataList.forEach(f -> segmentationTableService.addOrReplace(f, false));
+    segmentationTableService.getFragmentedSpace().addAll(newFragmentedSpace);
+    return newFileMetaDataList.size();
+  }
 
-    public Queue<FileMetaData> getFragmentedSpace() {
-      return fragmentedSpace;
-    }
+  private FileMetaData generateNewEmptySpace(
+      FileMetaData fileMetaData, byte[] fileToMoveBytes, FileMetaData emptySpace) {
+    // Drop the file in old address store it in the new one.
+    storageService.dropFromContainer(fileMetaData.getFrom(), fileMetaData.getTo());
+    storageService.storeInContainer(fileToMoveBytes, emptySpace.getFrom());
 
-    Optional<FileMetaData> find(String absolutePath) {
-      String[] filePath = absolutePath.split(BASE_LOGIC_PATH);
-      String fileName = filePath[filePath.length - 1];
-      Map<String, FileMetaData> filesFromDepth =
-          data.getOrDefault(getDepth(absolutePath), new ConcurrentHashMap<>());
-      return Optional.ofNullable(filesFromDepth.get(fileName))
-          .filter(file -> file.getAbsolutePath().equals(absolutePath));
-    }
+    return new FileMetaData(
+        emptySpace.getFileName(),
+        emptySpace.getAbsolutePath(),
+        emptySpace.getFrom() + fileToMoveBytes.length,
+        emptySpace.getTo(),
+        fileMetaData.getSegmentNumber());
+  }
 
-    void addOrReplace(FileMetaData fileMetaData) {
-      int depth = getDepth(fileMetaData.getAbsolutePath());
-      Map<String, FileMetaData> filesFromDepth =
-          data.getOrDefault(depth, new ConcurrentHashMap<>());
+  private static FileMetaData generateNewMetaData(
+      FileMetaData fileMetaData, byte[] fileToMoveBytes, FileMetaData emptySpace) {
+    return new FileMetaData(
+        fileMetaData.getFileName(),
+        fileMetaData.getAbsolutePath(),
+        emptySpace.getFrom(),
+        emptySpace.getFrom() + fileToMoveBytes.length,
+        emptySpace.getSegmentNumber());
+  }
 
-      if (filesFromDepth.containsKey(fileMetaData.getFileName())) {
-        fragmentedSpace.offer(fileMetaData);
-      }
-
-      filesFromDepth.put(fileMetaData.getFileName(), fileMetaData);
-      data.put(depth, filesFromDepth);
-    }
-
-    void delete(FileMetaData file) {
-      int depth = getDepth(file.getAbsolutePath());
-      Map<String, FileMetaData> filesFromDepth =
-          data.getOrDefault(depth, new ConcurrentHashMap<>());
-      filesFromDepth.remove(file.getFileName());
-      data.put(depth, filesFromDepth);
-      fragmentedSpace.offer(file);
-    }
-
-    static int getDepth(String absolutePath) {
-      String[] filePath = absolutePath.split(BASE_LOGIC_PATH);
-      return filePath.length - 2;
-    }
+  private static Optional<FileMetaData> findFileToMove(
+      List<FileMetaData> sortedSegmentationTable, FileMetaData emptySpace) {
+    return sortedSegmentationTable.stream()
+        .filter(f -> emptySpace.getTo() <= f.getFrom())
+        .findFirst();
   }
 }

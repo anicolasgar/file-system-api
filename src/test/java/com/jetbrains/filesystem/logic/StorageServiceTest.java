@@ -36,6 +36,6 @@ class StorageServiceTest {
     System.arraycopy(test1, 0, expectedArray, 0, test1.length);
     System.arraycopy(test2, 0, expectedArray, test1.length, test2.length);
 
-    assertThat(storageService.readFromContainer()).isEqualTo(expectedArray);
+    assertThat(storageService.readAllFromContainer()).isEqualTo(expectedArray);
   }
 }

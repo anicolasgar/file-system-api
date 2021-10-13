@@ -1,4 +1,4 @@
-package com.jetbrains.filesystem.logic;
+package com.jetbrains.filesystem.api;
 
 import java.io.Serializable;
 import java.util.Locale;
