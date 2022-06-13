@@ -1,4 +1,4 @@
-package com.jetbrains.filesystem.logic;
+package com.nicolasgarcia.filesystem.logic;
 
 import java.util.Collection;
 import java.util.Comparator;

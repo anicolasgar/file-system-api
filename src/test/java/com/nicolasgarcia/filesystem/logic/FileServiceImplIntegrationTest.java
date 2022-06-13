@@ -1,17 +1,17 @@
-package com.jetbrains.filesystem.logic;
+package com.nicolasgarcia.filesystem.logic;
 
-import static com.jetbrains.filesystem.logic.StorageService.BASE_PHYSICAL_PATH;
-import static com.jetbrains.filesystem.logic.StorageService.CONTAINER_NAME;
-import static com.jetbrains.filesystem.utils.SerializationUtils.serialize;
+import static com.nicolasgarcia.filesystem.logic.StorageService.BASE_PHYSICAL_PATH;
+import static com.nicolasgarcia.filesystem.logic.StorageService.CONTAINER_NAME;
+import static com.nicolasgarcia.filesystem.utils.SerializationUtils.serialize;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.jetbrains.filesystem.api.File;
-import com.jetbrains.filesystem.exceptions.FileNotFoundException;
-import com.jetbrains.filesystem.utils.SerializationUtils;
+import com.nicolasgarcia.filesystem.api.File;
+import com.nicolasgarcia.filesystem.exceptions.FileNotFoundException;
+import com.nicolasgarcia.filesystem.utils.SerializationUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;

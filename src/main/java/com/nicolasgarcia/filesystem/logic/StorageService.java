@@ -1,6 +1,6 @@
-package com.jetbrains.filesystem.logic;
+package com.nicolasgarcia.filesystem.logic;
 
-import com.jetbrains.filesystem.exceptions.FileNotFoundException;
+import com.nicolasgarcia.filesystem.exceptions.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;

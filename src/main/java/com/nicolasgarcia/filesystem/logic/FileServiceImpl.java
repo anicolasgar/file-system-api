@@ -1,7 +1,7 @@
-package com.jetbrains.filesystem.logic;
+package com.nicolasgarcia.filesystem.logic;
 
-import com.jetbrains.filesystem.api.File;
-import com.jetbrains.filesystem.api.FileService;
+import com.nicolasgarcia.filesystem.api.File;
+import com.nicolasgarcia.filesystem.api.FileService;
 import java.util.Map;
 
 public class FileServiceImpl implements FileService {

@@ -1,6 +1,6 @@
-package com.jetbrains.filesystem.logic;
+package com.nicolasgarcia.filesystem.logic;
 
-import com.jetbrains.filesystem.api.File;
+import com.nicolasgarcia.filesystem.api.File;
 
 /**
  * Contains meta-data from a specific (existing) {@link File}.

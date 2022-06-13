@@ -1,7 +1,7 @@
-package com.jetbrains.filesystem.logic;
+package com.nicolasgarcia.filesystem.logic;
 
-import static com.jetbrains.filesystem.logic.StorageService.BASE_PHYSICAL_PATH;
-import static com.jetbrains.filesystem.logic.StorageService.CONTAINER_NAME;
+import static com.nicolasgarcia.filesystem.logic.StorageService.BASE_PHYSICAL_PATH;
+import static com.nicolasgarcia.filesystem.logic.StorageService.CONTAINER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;

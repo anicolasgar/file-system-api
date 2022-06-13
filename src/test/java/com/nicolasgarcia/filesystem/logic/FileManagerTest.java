@@ -1,12 +1,12 @@
-package com.jetbrains.filesystem.logic;
+package com.nicolasgarcia.filesystem.logic;
 
-import static com.jetbrains.filesystem.utils.SerializationUtils.serialize;
+import static com.nicolasgarcia.filesystem.utils.SerializationUtils.serialize;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import com.jetbrains.filesystem.api.File;
-import com.jetbrains.filesystem.exceptions.FileNotFoundException;
+import com.nicolasgarcia.filesystem.api.File;
+import com.nicolasgarcia.filesystem.exceptions.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

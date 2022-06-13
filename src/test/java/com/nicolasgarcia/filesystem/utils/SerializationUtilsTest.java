@@ -1,8 +1,8 @@
-package com.jetbrains.filesystem.utils;
+package com.nicolasgarcia.filesystem.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.jetbrains.filesystem.api.File;
+import com.nicolasgarcia.filesystem.api.File;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;

@@ -1,10 +1,10 @@
-package com.jetbrains.filesystem.logic;
+package com.nicolasgarcia.filesystem.logic;
 
-import static com.jetbrains.filesystem.utils.SerializationUtils.serialize;
+import static com.nicolasgarcia.filesystem.utils.SerializationUtils.serialize;
 
-import com.jetbrains.filesystem.api.File;
-import com.jetbrains.filesystem.exceptions.FileCorruptedException;
-import com.jetbrains.filesystem.exceptions.FileNotFoundException;
+import com.nicolasgarcia.filesystem.api.File;
+import com.nicolasgarcia.filesystem.exceptions.FileCorruptedException;
+import com.nicolasgarcia.filesystem.exceptions.FileNotFoundException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;

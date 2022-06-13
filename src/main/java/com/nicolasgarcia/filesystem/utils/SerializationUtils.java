@@ -1,4 +1,4 @@
-package com.jetbrains.filesystem.utils;
+package com.nicolasgarcia.filesystem.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

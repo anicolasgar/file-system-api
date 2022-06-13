@@ -1,6 +1,6 @@
-package com.jetbrains.filesystem.api;
+package com.nicolasgarcia.filesystem.api;
 
-import com.jetbrains.filesystem.exceptions.FileNotFoundException;
+import com.nicolasgarcia.filesystem.exceptions.FileNotFoundException;
 import java.util.Map;
 
 /** Service for managing file system's operations. */
